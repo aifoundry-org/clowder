@@ -1,0 +1,56 @@
+{{- if .Values.openWebUI.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-webui
+  template:
+    metadata:
+      labels:
+        app: open-webui
+    spec:
+      containers:
+        - name: open-webui
+          image: {{ .Values.openWebUI.image.repository }}:{{ .Values.openWebUI.image.tag }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: WEBUI_AUTH
+              value: '{{ .Values.openWebUI.env.WEBUI_AUTH }}'
+            - name: WEBUI_NAME
+              value: {{ .Values.openWebUI.env.WEBUI_NAME }}
+            - name: ENABLE_OLLAMA_API
+              value: '{{ .Values.openWebUI.env.ENABLE_OLLAMA_API }}'
+            - name: OPENAI_API_BASE_URL
+              value: http://nekko-lb-svc.{{ .Release.Namespace }}:{{ .Values.nekkoLB.service.port }}/v1
+          volumeMounts:
+            - name: ui
+              mountPath: /app/backend/data
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+      volumes:
+        - name: ui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-webui
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: open-webui
+  ports:
+    - protocol: TCP
+      port: {{ .Values.openWebUI.service.port }}
+      targetPort: {{ .Values.openWebUI.service.targetPort }}
+  type: {{ .Values.openWebUI.service.type }}
+{{- end }}

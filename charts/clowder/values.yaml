@@ -1,0 +1,44 @@
+# Default values for clowder chart
+# This is a YAML-formatted file.
+
+# Nekko Load Balancer configuration
+nekkoLB:
+  enabled: true
+  image:
+    repository: docker.io/aifoundryorg/load-balancer
+    tag: latest
+  service:
+    type: LoadBalancer
+    port: 3090
+    targetPort: 8080
+  replicas: 1
+
+# Nekko Storage Manager configuration
+nekkoSM:
+  enabled: true
+  image:
+    repository: docker.io/aifoundryorg/storage-manager
+    tag: latest
+  hostPath: /data
+
+# Worker Pod Template configuration
+workerPodTemplate:
+  image:
+    repository: docker.io/aifoundryorg/nekko-api
+    tag: latest
+  modelCachePath: /data
+
+# Open WebUI configuration
+openWebUI:
+  enabled: true
+  image:
+    repository: ghcr.io/open-webui/open-webui
+    tag: 0.4.8
+  service:
+    type: LoadBalancer
+    port: 4080
+    targetPort: 8080
+  env:
+    WEBUI_AUTH: "false"
+    WEBUI_NAME: "NekkoAPI UI"
+    ENABLE_OLLAMA_API: "false"

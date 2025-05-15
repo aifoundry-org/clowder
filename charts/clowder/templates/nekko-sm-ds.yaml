@@ -1,0 +1,37 @@
+{{- if .Values.nekkoSM.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nekko-sm
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      name: nekko-sm
+  template:
+    metadata:
+      labels:
+        name: nekko-sm
+        app: nekko-sm
+    spec:
+      containers:
+      - name: nekko-sm
+        image: {{ .Values.nekkoSM.image.repository }}:{{ .Values.nekkoSM.image.tag }}
+        ports:
+          - containerPort: 8050
+        args: ["--address=0.0.0.0:8050", "-v=2"]
+        volumeMounts:
+        - name: model-cache-dir
+          mountPath: /var/lib/nekko/cache
+      volumes:
+      - name: model-cache-dir
+        hostPath:
+          path: {{ .Values.nekkoSM.hostPath }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+{{- end }}

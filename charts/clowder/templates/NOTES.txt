@@ -1,0 +1,21 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{- if .Values.nekkoLB.enabled }}
+The Nekko Load Balancer is available at:
+  http://<external-ip>:{{ .Values.nekkoLB.service.port }}
+{{- end }}
+
+{{- if .Values.openWebUI.enabled }}
+The Open WebUI is available at:
+  http://<external-ip>:{{ .Values.openWebUI.service.port }}
+{{- end }}
+
+To get the external IP addresses, run:
+  kubectl get svc -n {{ .Release.Namespace }}

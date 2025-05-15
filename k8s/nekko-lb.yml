@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nekko-lb-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nekko-lb-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nekko-lb-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: nekko-lb-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: nekko-lb-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nekko-lb
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nekko-lb
+  template:
+    metadata:
+      labels:
+        app: nekko-lb
+    spec:
+      serviceAccountName: nekko-lb-sa
+      containers:
+      - name: nekko-lb
+        image: docker.io/aifoundryorg/load-balancer:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: worker-pod-template
+          mountPath: "/app/templates"
+      volumes:
+        - name: worker-pod-template
+          configMap:
+            name: worker-pod-template
+            items:
+            - key: "worker-pod-template.yaml"
+              path: "worker-pod-template.yaml"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nekko-lb-svc
+  labels:
+    app: nekko-lb
+spec:
+  ports:
+    - protocol: TCP
+      port: 3090
+      targetPort: 8080
+  selector:
+    app: nekko-lb
+  type: LoadBalancer
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: worker-pod-template
+data:
+  worker-pod-template.yaml: |
+    kind: Pod
+    apiVersion: v1
+    metadata:
+      name: worker-pod
+      namespace: default
+      labels:
+        app: nekko-worker
+        model-alias: {{.ModelAlias}}
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: {{.NodeName}}
+      containers:
+      - name: nekko-worker
+        image: docker.io/aifoundryorg/nekko-api:latest
+        ports:
+        - containerPort: 8000
+        env:
+          - name: MODEL_ALIAS
+            value: {{.ModelAlias}}
+          - name: MODEL
+            value: {{.ModelURL}}
+          - name: MODEL_PATH
+            value: {{.ModelPath}}
+        volumeMounts:
+        - name: model-cache-dir
+          mountPath: /var/lib/nekko/cache
+          readOnly: true
+      volumes:
+      - name: model-cache-dir
+        hostPath:
+          path: /data

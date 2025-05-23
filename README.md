@@ -14,7 +14,42 @@ in a single place:
 - storage manager (manages AI models) https://github.com/aifoundry-org/storage-manager
 - (bonus) oxide controller that bootstraps Clowder cluster on [0xide](https://oxide.computer/) https://github.com/aifoundry-org/oxide-controller
 
-TODO: chart
+```mermaid
+graph TD
+    Internet[Internet] --> LB[Load Balancer/Reverse Proxy]
+    LB <--> Controller[Controller <br> <i>WIP</i>]
+    
+    subgraph "Node 1"
+        SM1[Storage Manager]
+        ModelsVolume1[Shared Models Volume]
+        SM1 --- ModelsVolume1
+        RT1_1[Runtime Pod <br> NekkoAPI]
+        RT1_2[Runtime Pod <br> NekkoAPI]
+        ModelsVolume1 --- RT1_1
+        ModelsVolume1 --- RT1_2
+    end
+    
+    subgraph "Node 2"
+        SM2[Storage Manager]
+        ModelsVolume2[Shared Models Volume]
+        SM2 --- ModelsVolume2
+        RT2_1[Runtime Pod <br> NekkoAPI]
+        RT2_2[Runtime Pod <br> NekkoAPI]
+        ModelsVolume2 --- RT2_1
+        ModelsVolume2 --- RT2_2
+    end
+    
+    Controller -.-> SM1
+    Controller -.-> SM2
+    
+    LB --> RT1_1
+    LB --> RT1_2
+    LB --> RT2_1
+    LB --> RT2_2
+    
+    classDef wip stroke-dasharray: 5 5;
+    class Controller wip;
+```
 
 [NOTE]: Clowder is very much in development and is not expected to be used in
 production, but should be fit to play with it.

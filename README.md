@@ -11,7 +11,7 @@ in a single place:
 - inference runtime (actually with llama.cpp underneath - of course) https://github.com/aifoundry-org/NekkoAPI
 - LLM aware load balancer
 - cluster controller (WIP)
-- storage manager (manages AI models) https://github.com/aifoundry-org/storage-manager
+- storage manager (manages AI models) https://github.com/clowder-dev/storage-manager
 - (bonus) oxide controller that bootstraps Clowder cluster on [0xide](https://oxide.computer/) https://github.com/aifoundry-org/oxide-controller
 
 ```mermaid
@@ -144,7 +144,7 @@ Otherwise you can use kubernetes cli directly. For this to work you should clone
 this repository first:
 
 ```sh
-git clone https://github.com/aifoundry-org/clowder.git
+git clone https://github.com/clowder-dev/clowder.git
 cd clowder
 ```
 
